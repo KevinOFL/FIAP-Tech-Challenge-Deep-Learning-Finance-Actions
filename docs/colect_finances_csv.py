@@ -1,6 +1,7 @@
 import pandas as pd
 import yfinance as yf
 import os
+from log_config import logger
 
 class Collet_CSVs:
     def __init__(self):
@@ -8,11 +9,13 @@ class Collet_CSVs:
         self.data = []
         
     def clean_csv_aux(self, csv="docs/planilhas_aux/acoes_setor_de_energia.csv"):
-        # Load the CSV file
-        df = pd.read_csv(csv, )
+        """ 
+        Cleans the auxiliary CSV file by removing unnecessary columns and formatting tickers.
+        """
         
-        # Example cleaning steps
-        df.dropna(inplace=True)  # Remove missing values
+        df = pd.read_csv(csv)
+        
+        df.dropna(inplace=True)
         df.drop(axis=1, columns=['Setor', 'Subsegmento', 'Empresa'], inplace=True)
         df = df + ".SA"
         df.reset_index(drop=True, inplace=True)
@@ -20,13 +23,17 @@ class Collet_CSVs:
         return df
     
     def collect_finances_csv(self):
+        """ 
+        Collects financial data for tickers listed in the auxiliary CSV and saves them as individual CSV files.
+        """
+        
         df_tickers = self.clean_csv_aux()
         
         df_tickers = df_tickers[1:]
         
         for ticker_string in df_tickers['Ticker']:
             try:
-                print(f"Processando Ticker: {ticker_string}")
+                logger.info(f"Processando Ticker: {ticker_string}")
                 
                 stock = yf.Ticker(ticker_string)
                 stock_6mon = stock.history(period="6mo")
@@ -38,11 +45,15 @@ class Collet_CSVs:
                 
             except Exception as e:
                 # yfinance pode falhar por 'KeyError' ou problemas de conexão, não 'FileNotFoundError'.
-                print(f"Falha ao processar {ticker_string}: {e}")
+                logger.error(f"Falha ao processar {ticker_string}: {e}")
                 
-        return "Data collection complete."
+        return logger.info("Data collection complete.")
     
     def join_csvs(self):
+        """ 
+        Joins individual CSV files into a single comprehensive CSV file.
+        """
+        
         all_files = os.listdir(self.file_path)
         csv_files = [f for f in all_files if f.endswith('_6mo.csv')]
         
@@ -53,7 +64,8 @@ class Collet_CSVs:
         
         combined_df = pd.concat(df_list, ignore_index=True)
         combined_df.to_csv("docs/planilhas_completas/data_actions_energy_6mo.csv", index=False)
-        return "CSV files joined successfully."
+        
+        return logger.info("CSV files joined successfully.")
     
     def main(self):
         self.collect_finances_csv()
