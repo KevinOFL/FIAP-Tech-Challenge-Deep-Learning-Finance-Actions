@@ -1,7 +1,7 @@
 import pandas as pd
 import yfinance as yf
 import os
-from log_config import logger
+from configs.log_config import logger
 
 class Collet_CSVs:
     def __init__(self):
