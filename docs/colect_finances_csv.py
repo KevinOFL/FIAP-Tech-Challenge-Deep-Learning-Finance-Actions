@@ -1,12 +1,25 @@
 import pandas as pd
 import yfinance as yf
 import os
-from configs.log_config import logger
+import sys
 
-class Collet_CSVs:
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
+
+from configs.log_config import logger
+class Collect_CSVs:
     def __init__(self):
-        self.file_path = "docs/acoes"
-        self.data = []
+        # Ajuste para garantir que o caminho funcione independente de onde o script é rodado
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.file_path = os.path.join(self.base_path, "acoes")
+        
+        # Garante que a pasta de output existe
+        os.makedirs(self.file_path, exist_ok=True)
+        
+        self.aux_path = os.path.join(self.base_path, "planilhas_aux", "acoes_setor_de_energia.csv")
+        self.final_path = os.path.join(self.base_path, "planilhas_completas")
+        os.makedirs(self.final_path, exist_ok=True)
         
     def clean_csv_aux(self, csv="docs/planilhas_aux/acoes_setor_de_energia.csv"):
         """ 
@@ -36,18 +49,24 @@ class Collet_CSVs:
                 logger.info(f"Processando Ticker: {ticker_string}")
                 
                 stock = yf.Ticker(ticker_string)
-                stock_6mon = stock.history(period="6mo")
-                df_datas = pd.DataFrame(stock_6mon)
+                stock_1year = stock.history(period="1y")
+                
+                if stock_1year.empty:
+                    logger.warning(f"Nenhum dado encontrado para {ticker_string}")
+                    continue
+                
+                df_datas = pd.DataFrame(stock_1year)
                 df_datas["Ticker"] = ticker_string
                 
                 safe_ticker_name = ticker_string.replace('/', '_') 
-                df_datas.to_csv(f"{self.file_path}/{safe_ticker_name}_6mo.csv")
+                save_location = os.path.join(self.file_path, f"{safe_ticker_name}_1year.csv")
+                df_datas.to_csv(save_location)
                 
             except Exception as e:
                 # yfinance pode falhar por 'KeyError' ou problemas de conexão, não 'FileNotFoundError'.
                 logger.error(f"Falha ao processar {ticker_string}: {e}")
                 
-        return logger.info("Data collection complete.")
+        logger.info("Data collection complete.")
     
     def join_csvs(self):
         """ 
@@ -55,17 +74,23 @@ class Collet_CSVs:
         """
         
         all_files = os.listdir(self.file_path)
-        csv_files = [f for f in all_files if f.endswith('_6mo.csv')]
+        csv_files = [f for f in all_files if f.endswith('_1year.csv')]
+        
+        if not csv_files:
+            logger.warning("Nenhum arquivo CSV encontrado para unir.")
+            return
         
         df_list = []
         for file in csv_files:
-            df = pd.read_csv(f"{self.file_path}/{file}")
+            file_full_path = os.path.join(self.file_path, file)
+            df = pd.read_csv(file_full_path)
             df_list.append(df)
         
         combined_df = pd.concat(df_list, ignore_index=True)
-        combined_df.to_csv("docs/planilhas_completas/data_actions_energy_6mo.csv", index=False)
+        save_final = os.path.join(self.final_path, "data_actions_energy_1year.csv")
+        combined_df.to_csv(save_final, index=False)
         
-        return logger.info("CSV files joined successfully.")
+        logger.info(f"CSV files joined successfully at {save_final}")
     
     def main(self):
         self.collect_finances_csv()
@@ -73,5 +98,5 @@ class Collet_CSVs:
         
         
 if __name__ == "__main__":
-    collector = Collet_CSVs()
+    collector = Collect_CSVs()
     collector.main()  
