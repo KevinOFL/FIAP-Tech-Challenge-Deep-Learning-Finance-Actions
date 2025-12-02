@@ -97,6 +97,5 @@ class Collect_CSVs:
         self.join_csvs()
         
         
-if __name__ == "__main__":
-    collector = Collect_CSVs()
-    collector.main()  
+collector = Collect_CSVs()
+collector.main()  
