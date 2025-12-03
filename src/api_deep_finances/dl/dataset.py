@@ -84,7 +84,7 @@ def normalize_data(data: pd.DataFrame) -> pd.DataFrame:
     
     return data_normalized
 
-def sliding_window(data, window_size: int = 5) -> torch.Tensor:
+def sliding_window(data, window_size: int = 5) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Creates sliding windows of data for time series forecasting.
     Returns tensors for input features (X) and target values (y).
@@ -105,7 +105,7 @@ def sliding_window(data, window_size: int = 5) -> torch.Tensor:
         
     return torch.tensor(np.array(X).astype(np.float32)), torch.tensor(np.array(y).astype(np.float32))
     
-def main(path:str, collumn:str) -> pd.DataFrame:
+def main(path:str, collumn:str) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Main function to process the financial data CSV.
     Reads the CSV, applies date setup, outlier treatment, and feature engineering.
