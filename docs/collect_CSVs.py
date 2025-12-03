@@ -8,6 +8,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
 from configs.log_config import logger
+
 class Collect_CSVs:
     def __init__(self):
         # Ajuste para garantir que o caminho funcione independente de onde o script é rodado
