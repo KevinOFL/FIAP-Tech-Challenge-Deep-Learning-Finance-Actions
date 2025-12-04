@@ -1,30 +1,4 @@
 import torch.nn as nn
-import sys
-import os
-
-# Usar esse bloco somente se tiver problemas de importação como eu tive !!!!
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-grandparent_dir = os.path.dirname(parent_dir)
-project_root = os.path.dirname(grandparent_dir)
-sys.path.append(grandparent_dir) # Adiciona src
-sys.path.append(project_root)    # Adiciona a raiz do projeto
-
-from dataset import main as load_data
-from configs.log_config import logger
-
-PARAMS = {
-    'experimento': 'Deep_Finances_LSTM',
-    'input_size': 4,          # Número de features de entrada
-    'hidden_size': 50,        # Número de neurônios na camada oculta
-    'num_epochs': 100,        # Número de épocas para treinamento
-    'learning_rate': 0.001,   # Taxa de aprendizado
-    'window_size': 5,         # Tamanho da janela deslizante
-    'feature_column': 'Close' # Coluna alvo para previsão
-}
-
-logger.info("Carregando dados para treinamento...")
-X_train, y_train = load_data(path='./docs/planilhas_completas/data_actions_energy_1year.csv', collumn=PARAMS['feature_column'])
 
 class LSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size):
