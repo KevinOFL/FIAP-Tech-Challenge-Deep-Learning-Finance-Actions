@@ -64,7 +64,7 @@ def date_setup(df: pd.DataFrame) -> pd.DataFrame:
     
     return df_final
 
-def normalize_data(data: pd.DataFrame) -> pd.DataFrame:
+def normalize_data(data: pd.DataFrame, ticker:str) -> pd.DataFrame:
     """
     Normalizes the DataFrame using Min-Max scaling.
     """
@@ -79,8 +79,10 @@ def normalize_data(data: pd.DataFrame) -> pd.DataFrame:
     scaler_all = MinMaxScaler(feature_range=(0, 1))
     data_normalized[:] = scaler_all.fit_transform(data_normalized)
     
-    dump(scaler_target, './src/api_deep_finances/dl/scalers/scaler_target.joblib')
-    dump(scaler_all, './src/api_deep_finances/dl/scalers/scaler_all.joblib')
+    ticker = ticker.replace('.SA','')
+    
+    dump(scaler_target, f'./src/api_deep_finances/dl/scalers/scaler_target_{ticker}.joblib')
+    dump(scaler_all, f'./src/api_deep_finances/dl/scalers/scaler_all_{ticker}.joblib')
     
     return data_normalized
 
@@ -104,20 +106,26 @@ def sliding_window(data, window_size: int = 5) -> tuple[torch.Tensor, torch.Tens
         y.append(target_value)
         
     return torch.tensor(np.array(X).astype(np.float32)), torch.tensor(np.array(y).astype(np.float32))
-    
-def main(path:str, collumn:str) -> tuple[torch.Tensor, torch.Tensor]:
+
+def main(path:str, collumn:str, ticker:str) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Main function to process the financial data CSV.
     Reads the CSV, applies date setup, outlier treatment, and feature engineering.
     """
     # Acionando as funções de tratamento
     df = pd.read_csv(path)
+    
+    # Filtrando pelo ticker desejado
+    df = df[df['Ticker'] == ticker].copy()
+    if len(df) == 0:
+        raise ValueError(f"No data found for ticker: {ticker}")
+    
     df = date_setup(df)
     df = treat_outliers_capping(df, collumn)
     df = feature_engineering(df)
     
     # Removendo colunas desnecessárias
-    df = df.drop(columns=['Ticker','Dividends', 'Stock Splits', 'Volume', 'Open', 'High', 'Low'])
+    df = df.drop(columns=['Ticker','Dividends', 'Stock Splits', 'Volume', 'Open', 'High', 'Low'], errors='ignore')
     
     # Ajustando o DataFrame para o formato esperado
     df.reset_index(drop=True, inplace=True) 
@@ -125,11 +133,11 @@ def main(path:str, collumn:str) -> tuple[torch.Tensor, torch.Tensor]:
     df = df[['Target', 'SMA_5', 'SMA_15', 'SMA_30', 'Variation_pct']]
     
     # Normalizando os dados e criando as janelas deslizantes
-    df = normalize_data(df)
+    df = normalize_data(df, ticker)
     data_array = df.values
     X_tensor, y_tensor = sliding_window(data_array)
     
     return X_tensor, y_tensor
 
 # Como usar:
-#    X_train, y_train = main(path='./docs/planilhas_completas/data_actions_energy_1year.csv', collumn='Close')
+#    X_train, y_train, df_tickers = main(path='./docs/planilhas_completas/data_actions_energy_1year.csv', collumn='Close')

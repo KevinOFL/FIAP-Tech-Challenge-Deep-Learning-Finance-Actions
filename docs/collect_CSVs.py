@@ -50,17 +50,17 @@ class Collect_CSVs:
                 logger.info(f"Processando Ticker: {ticker_string}")
                 
                 stock = yf.Ticker(ticker_string)
-                stock_1year = stock.history(period="1y")
+                stock_3year = stock.history(period="3y")
                 
-                if stock_1year.empty:
+                if stock_3year.empty:
                     logger.warning(f"Nenhum dado encontrado para {ticker_string}")
                     continue
                 
-                df_datas = pd.DataFrame(stock_1year)
+                df_datas = pd.DataFrame(stock_3year)
                 df_datas["Ticker"] = ticker_string
                 
                 safe_ticker_name = ticker_string.replace('/', '_') 
-                save_location = os.path.join(self.file_path, f"{safe_ticker_name}_1year.csv")
+                save_location = os.path.join(self.file_path, f"{safe_ticker_name}_3year.csv")
                 df_datas.to_csv(save_location)
                 
             except Exception as e:
@@ -75,7 +75,7 @@ class Collect_CSVs:
         """
         
         all_files = os.listdir(self.file_path)
-        csv_files = [f for f in all_files if f.endswith('_1year.csv')]
+        csv_files = [f for f in all_files if f.endswith('_3year.csv')]
         
         if not csv_files:
             logger.warning("Nenhum arquivo CSV encontrado para unir.")
@@ -88,7 +88,7 @@ class Collect_CSVs:
             df_list.append(df)
         
         combined_df = pd.concat(df_list, ignore_index=True)
-        save_final = os.path.join(self.final_path, "data_actions_energy_1year.csv")
+        save_final = os.path.join(self.final_path, "data_actions_energy_3year.csv")
         combined_df.to_csv(save_final, index=False)
         
         logger.info(f"CSV files joined successfully at {save_final}")
