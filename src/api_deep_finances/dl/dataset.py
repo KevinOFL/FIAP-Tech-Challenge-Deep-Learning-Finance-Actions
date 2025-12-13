@@ -107,7 +107,7 @@ def sliding_window(data, window_size: int = 5) -> tuple[torch.Tensor, torch.Tens
         
     return torch.tensor(np.array(X).astype(np.float32)), torch.tensor(np.array(y).astype(np.float32))
 
-def main(path:str, collumn:str, ticker:str) -> tuple[torch.Tensor, torch.Tensor]:
+def main(path:str, collumn:str, ticker:str, window_size: int) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Main function to process the financial data CSV.
     Reads the CSV, applies date setup, outlier treatment, and feature engineering.
@@ -135,9 +135,18 @@ def main(path:str, collumn:str, ticker:str) -> tuple[torch.Tensor, torch.Tensor]
     # Normalizando os dados e criando as janelas deslizantes
     df = normalize_data(df, ticker)
     data_array = df.values
-    X_tensor, y_tensor = sliding_window(data_array)
     
-    return X_tensor, y_tensor
+    # Criando as janelas deslizantes
+    X_tensor, y_tensor = sliding_window(data_array, window_size=window_size)
+    
+    # Dividindo em treino e teste (80% treino, 20% teste)
+    train_size = int(len(X_tensor) * 0.8)
+    X_train = X_tensor[:train_size]
+    y_train = y_tensor[:train_size]
+    X_test = X_tensor[train_size:]
+    y_test = y_tensor[train_size:]
+    
+    return X_train, y_train, X_test, y_test
 
 # Como usar:
-#    X_train, y_train, df_tickers = main(path='./docs/planilhas_completas/data_actions_energy_1year.csv', collumn='Close')
+#    X_train, y_train, X_test, y_test = main(path='./docs/planilhas_completas/data_actions_energy_3year.csv', collumn='Close', ticker='AAPL.SA')
