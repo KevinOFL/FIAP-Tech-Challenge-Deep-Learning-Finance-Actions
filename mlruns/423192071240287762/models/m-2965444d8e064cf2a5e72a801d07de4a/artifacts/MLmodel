@@ -1,0 +1,35 @@
+artifact_path: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-2965444d8e064cf2a5e72a801d07de4a/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.13.7
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.9.1+cpu
+is_signature_from_type_hint: false
+mlflow_version: 3.6.0
+model_id: m-2965444d8e064cf2a5e72a801d07de4a
+model_size_bytes: 240856
+model_uuid: m-2965444d8e064cf2a5e72a801d07de4a
+prompts: null
+run_id: 6c2ffc79aedc42799111c54205f50ae5
+saved_input_example_info:
+  artifact_path: input_example.json
+  serving_input_path: serving_input_example.json
+  type: ndarray
+signature:
+  inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float32", "shape": [-1, 30,
+    5]}}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float32", "shape": [-1,
+    1]}}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-12-15 18:29:53.052578'

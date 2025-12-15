@@ -1,0 +1,15 @@
+creation_timestamp: 1765823650396
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823650396
+model_id: m-5a75e2f375c24bcbb53c86d765dbd20e
+name: LSTMModel_ENEV3
+run_id: e85e730c1b154416918a85b310b37a99
+run_link: null
+source: models:/m-5a75e2f375c24bcbb53c86d765dbd20e
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-5a75e2f375c24bcbb53c86d765dbd20e/artifacts
+user_id: null
+version: 1

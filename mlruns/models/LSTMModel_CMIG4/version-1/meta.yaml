@@ -1,0 +1,15 @@
+creation_timestamp: 1765823484815
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823484815
+model_id: m-c741935db3d443c99a962001f725f5e1
+name: LSTMModel_CMIG4
+run_id: fa6a39d06d9446228c88130faab08158
+run_link: null
+source: models:/m-c741935db3d443c99a962001f725f5e1
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-c741935db3d443c99a962001f725f5e1/artifacts
+user_id: null
+version: 1

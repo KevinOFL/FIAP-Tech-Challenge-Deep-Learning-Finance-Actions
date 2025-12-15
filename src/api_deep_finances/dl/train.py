@@ -25,7 +25,7 @@ PARAMS = {
     'input_size': 5,                            # Número de features de entrada
     'num_epochs': 1000,                         # Número de épocas para treinamento
     'feature_column': 'Close',                  # Coluna alvo para previsão
-    'patience': 250,                            # Paciência para early stopping
+    'patience': 100,                            # Paciência para early stopping
     'min_delta': 0.000001                       # Mudança mínima para considerar melhoria
 }
 

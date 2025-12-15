@@ -1,0 +1,15 @@
+creation_timestamp: 1765824026794
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765824026794
+model_id: m-c344c65696f44213aa24c8b1221140eb
+name: LSTMModel_UGPA3
+run_id: 4fd13ce66f534d4392311c0e7c58fe36
+run_link: null
+source: models:/m-c344c65696f44213aa24c8b1221140eb
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-c344c65696f44213aa24c8b1221140eb/artifacts
+user_id: null
+version: 1

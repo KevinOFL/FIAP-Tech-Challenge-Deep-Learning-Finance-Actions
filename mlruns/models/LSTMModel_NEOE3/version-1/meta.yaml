@@ -1,0 +1,15 @@
+creation_timestamp: 1765823754374
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823754374
+model_id: m-ad6a6dca08c14beaa2b004f74730cd0a
+name: LSTMModel_NEOE3
+run_id: bc398a09277647ca980d49831a20aa2a
+run_link: null
+source: models:/m-ad6a6dca08c14beaa2b004f74730cd0a
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-ad6a6dca08c14beaa2b004f74730cd0a/artifacts
+user_id: null
+version: 1

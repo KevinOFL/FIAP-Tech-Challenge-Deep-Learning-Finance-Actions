@@ -1,0 +1,15 @@
+creation_timestamp: 1765823574204
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823574204
+model_id: m-d9eefb428df4407ab9d8bc2830ac89e6
+name: LSTMModel_CSAN3
+run_id: cfe3865e664e491989f7fb85321b4497
+run_link: null
+source: models:/m-d9eefb428df4407ab9d8bc2830ac89e6
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-d9eefb428df4407ab9d8bc2830ac89e6/artifacts
+user_id: null
+version: 1

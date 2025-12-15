@@ -1,0 +1,15 @@
+creation_timestamp: 1765823973661
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823973661
+model_id: m-6c99ff0290f54c1bad969f6dc6697c44
+name: LSTMModel_RECV3
+run_id: 6dfc696f87214c229b2f61256ae9bec3
+run_link: null
+source: models:/m-6c99ff0290f54c1bad969f6dc6697c44
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-6c99ff0290f54c1bad969f6dc6697c44/artifacts
+user_id: null
+version: 1
