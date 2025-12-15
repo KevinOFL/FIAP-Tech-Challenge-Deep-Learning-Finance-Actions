@@ -19,7 +19,7 @@ from configs.log_config import logger
 from modelo import LSTMModel
 
 #TICKER_ALVO = "ALUP11.SA" # Escolha um ticker representativo ou aquele que está com performance ruim
-N_TRIALS = 20             # Quantas combinações diferentes o Optuna vai testar
+N_TRIALS = 30             # Quantas combinações diferentes o Optuna vai testar
 TICKERS = pd.read_csv('./docs/planilhas_completas/data_actions_energy_3year.csv')['Ticker'].unique().tolist()
 
 def objective(trial, ticker_index=0):
@@ -68,7 +68,7 @@ def objective(trial, ticker_index=0):
 
     # Loop de treinamento simples
     # Não precisamos de 1000 épocas para saber se a configuração é boa. 50 ou 100 bastam.
-    EPOCHS_TUNING = 50
+    EPOCHS_TUNING = 100
     
     for epoch in range(EPOCHS_TUNING):
         modelo.train()
