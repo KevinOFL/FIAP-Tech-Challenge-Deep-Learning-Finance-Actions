@@ -23,25 +23,33 @@ from configs.log_config import logger
 PARAMS = {
     'experimento': 'Deep_Finances_LSTM_for_energy_actions',
     'input_size': 5,                            # Número de features de entrada
-    'hidden_size': 64,                          # Número de neurônios na camada oculta
-    'num_layers': 2,                            # Número de camadas LSTM
     'num_epochs': 1000,                         # Número de épocas para treinamento
-    'learning_rate': 0.001,                     # Taxa de aprendizado
-    'window_size': 20,                          # Tamanho da janela deslizante
     'feature_column': 'Close',                  # Coluna alvo para previsão
     'patience': 250,                            # Paciência para early stopping
-    'min_delta': 0.00001                        # Mudança mínima para considerar melhoria
+    'min_delta': 0.000001                       # Mudança mínima para considerar melhoria
 }
 
+# Contém os melhores hiperparâmetros para cada ticker
+# windows_size, hidden_size, num_layers, learning_rate
+params_for_tickers = pd.read_csv('./src/api_deep_finances/dl/docs/optimized_hyperparameters.csv')
 
-
-tickers = pd.read_csv('./docs/planilhas_completas/data_actions_energy_3year.csv')['Ticker'].unique().tolist()
+tickers = params_for_tickers['ticker'].unique().tolist()
 
 for i, ticker in enumerate(tickers):
+    windows_size = params_for_tickers[params_for_tickers['ticker']==ticker]['window_size'].values[0]
+    hidden_size = int(params_for_tickers[params_for_tickers['ticker']==ticker]['hidden_size'].values[0])
+    num_layers = params_for_tickers[params_for_tickers['ticker']==ticker]['num_layers'].values[0]
+    learning_rate = params_for_tickers[params_for_tickers['ticker']==ticker]['learning_rate'].values[0]
+    
     logger.info(f"Treinando modelo para o ticker {ticker} ({i+1}/{len(tickers)})")
     
     logger.info(f"Carregando dados para treinamento...")
-    X_train, y_train, X_test, y_test = load_data(path='./docs/planilhas_completas/data_actions_energy_3year.csv', collumn=PARAMS['feature_column'], ticker=ticker, window_size=PARAMS['window_size'])
+    X_train, y_train, X_test, y_test = load_data(
+        path='./docs/planilhas_completas/data_actions_energy_3year.csv',
+        collumn=PARAMS['feature_column'],
+        ticker=ticker,
+        window_size=windows_size
+    )
     y_train = y_train.view(-1, 1)   # Ajusta o shape de y_train para (batch_size, 1)
     y_test = y_test.view(-1, 1)     # Ajusta o shape de y_test para (batch_size, 1)
 
@@ -58,9 +66,17 @@ for i, ticker in enumerate(tickers):
         mlflow.set_tag("optimizer", "Adam")
         mlflow.set_tag("developer", "Kevin")
         mlflow.log_params(PARAMS)
-    
-        modelo = LSTMModel(input_size=PARAMS['input_size'], hidden_size=PARAMS['hidden_size'], num_layers=PARAMS['num_layers'])
-    
+        mlflow.log_param("hidden_size", hidden_size)
+        mlflow.log_param("num_layers", num_layers)
+        mlflow.log_param("learning_rate", learning_rate)
+        mlflow.log_param("window_size", windows_size)
+
+        modelo = LSTMModel(
+            input_size=PARAMS['input_size'],
+            hidden_size=hidden_size,
+            num_layers=num_layers
+        )
+
         # Move modelo e dados para GPU se disponível
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         modelo.to(device)
@@ -70,7 +86,10 @@ for i, ticker in enumerate(tickers):
         y_test = y_test.to(device)
     
         criterion = torch.nn.MSELoss()
-        optimizer = optim.Adam(modelo.parameters(), lr=PARAMS['learning_rate'])
+        optimizer = optim.Adam(
+            modelo.parameters(),
+            lr=learning_rate
+        )
         
         # Learning rate scheduler para reduzir a taxa de aprendizado se a loss não melhorar por 10 épocas
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
