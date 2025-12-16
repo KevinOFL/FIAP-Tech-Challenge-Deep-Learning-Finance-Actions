@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.preprocessing import MinMaxScaler
-from joblib import dump
+from joblib import dump, load
 
 def treat_outliers_capping(df: pd.DataFrame, column: str) -> pd.DataFrame:
     """
@@ -10,26 +10,27 @@ def treat_outliers_capping(df: pd.DataFrame, column: str) -> pd.DataFrame:
     Ideal for Deep Learning to avoid breaking the temporal sequence.
     """
     df_treated = df.copy()
-    
-    for ticker in df_treated['Ticker'].unique():
-        # Máscara para selecionar apenas as linhas deste ticker
-        mask = df_treated['Ticker'] == ticker
+    if 'Ticker' not in df_treated.columns:
+        df_treated['Ticker'] = 'UNKNOWN'
         
-        # Dados do ticker atual
+    for ticker in df_treated['Ticker'].unique():
+        mask = df_treated['Ticker'] == ticker
         data = df_treated.loc[mask, column]
         
-        # Cálculo dos quartis e limites
-        q1 = data.quantile(0.25)
-        q3 = data.quantile(0.75)
-        iqr = q3 - q1
+        # Se tiver poucos dados, o quantile pode falhar ou ser impreciso
+        if len(data) > 0:
+            q1 = data.quantile(0.25)
+            q3 = data.quantile(0.75)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+            df_treated.loc[mask, column] = data.clip(lower=lower_bound, upper=upper_bound)
         
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
-        
-        # Aplica o "Capping" (clip) nos valores desse ticker
-        # Tudo abaixo do lower vira lower; tudo acima do upper vira upper
-        df_treated.loc[mask, column] = data.clip(lower=lower_bound, upper=upper_bound)
-        
+    # Remove a coluna fictícia se foi criada
+    if 'UNKNOWN' in df_treated['Ticker'].values:
+         if 'Ticker' in df_treated.columns and (df_treated['Ticker'] == 'UNKNOWN').all():
+             df_treated.drop(columns=['Ticker'], inplace=True)
+
     return df_treated
 
 def feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -106,6 +107,37 @@ def sliding_window(data, window_size: int = 5) -> tuple[torch.Tensor, torch.Tens
         y.append(target_value)
         
     return torch.tensor(np.array(X).astype(np.float32)), torch.tensor(np.array(y).astype(np.float32))
+
+def prediction_data_tratative(df: pd.DataFrame, window_size: int, ticker: str) -> torch.Tensor:
+        
+    path_root = './src/api_deep_finances/dl/scalers'
+    scaler_all = load(f'{path_root}/scaler_all_{ticker}.joblib')
+    
+    df_tratated = df.copy()
+    
+    if 'Ticker' not in df_tratated.columns:
+        df_tratated['Ticker'] = ticker
+        
+    df_tratated = date_setup(df_tratated)
+    df_tratated = treat_outliers_capping(df_tratated, 'Close')
+    df_tratated = feature_engineering(df_tratated)
+    
+    df_tratated = df_tratated.drop(columns=['Ticker','Dividends', 'Stock Splits', 'Volume', 'Open', 'High', 'Low'], errors='ignore')
+    df_tratated.reset_index(drop=True, inplace=True)
+    df_tratated.rename(columns={'Close': 'Target'}, inplace=True)
+    df_tratated = df_tratated[['Target', 'SMA_5', 'SMA_15', 'SMA_30', 'Variation_pct']]
+    
+    if len(df_tratated) < window_size:
+        raise ValueError(f"Dados insuficientes. O modelo precisa de {window_size} dias LIMPOS, mas só temos {len(df_tratated)}.")
+    
+    df_final = df_tratated.tail(window_size).copy()
+    
+    df_final[:] = scaler_all.transform(df_final)
+    
+    data_array = df_final.values
+    tensor = torch.tensor(np.array(data_array).astype(np.float32)).unsqueeze(0)
+
+    return tensor
 
 def main(path:str, collumn:str, ticker:str, window_size: int) -> tuple[torch.Tensor, torch.Tensor]:
     """
