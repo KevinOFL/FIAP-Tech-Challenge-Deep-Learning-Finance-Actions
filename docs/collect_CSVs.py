@@ -2,6 +2,9 @@ import pandas as pd
 import yfinance as yf
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -50,7 +53,7 @@ class Collect_CSVs:
                 logger.info(f"Processando Ticker: {ticker_string}")
                 
                 stock = yf.Ticker(ticker_string)
-                stock_3year = stock.history(period="3y")
+                stock_3year = stock.history(period=os.getenv("YEAR_HISTORY"))
                 
                 if stock_3year.empty:
                     logger.warning(f"Nenhum dado encontrado para {ticker_string}")
