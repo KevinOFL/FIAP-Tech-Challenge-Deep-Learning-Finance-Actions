@@ -7,6 +7,8 @@ class Prediction(Base):
     
     id = Column(String, primary_key=True, index=True, autoincrement=False)
     ticker = Column(String, nullable=False)
+    model_name = Column(String, nullable=False)
+    model_version = Column(String, nullable=False)
     prevision_price = Column(Numeric(11, 2), nullable=False)
     collection_date = Column(Date, server_default=func.current_date())
     collection_time = Column(Time, server_default=func.current_time())
