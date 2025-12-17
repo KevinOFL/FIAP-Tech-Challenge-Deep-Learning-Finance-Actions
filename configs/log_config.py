@@ -32,3 +32,4 @@ def configure_logger(aplication_name: str) -> logging.Logger:
 logger_api = configure_logger("api")
 logger_db = configure_logger("database")
 logger_training = configure_logger("training")
+logger_collection = configure_logger("data_collection")
