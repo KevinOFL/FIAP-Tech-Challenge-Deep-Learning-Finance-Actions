@@ -8,7 +8,7 @@ import types
 from dotenv import load_dotenv
 from joblib import load
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from typing import Literal
 
 
@@ -34,16 +34,13 @@ if 'modelo' not in sys.modules:
 mlruns_path = os.path.join(project_root, "mlruns")
 mlflow.set_tracking_uri(f"file:///{mlruns_path}")
 
-logger.info(f"MLflow Tracking URI configurado para: {mlflow.get_tracking_uri()}")
-
 app = FastAPI(title="API Deep Finances", version="1.0.0")
-
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     return "<h1>API Deep Finances Online</h1>"
 
-@app.post("/predict")
+@app.post("/predict", response_class=JSONResponse)
 async def predict(
     ticker: Literal[
     'NEOE3', 'AXIA6', 'EQTL3', 'RAIZ4', 'CPFE3', 'RECV3', 'AXIA3',     
@@ -51,7 +48,13 @@ async def predict(
     'ENEV3', 'TAEE11', 'UGPA3', 'ENGI11', 'LIGT3', 'CPLE6', 'PRIO3',
     'PETR4'
     ]):
-    
+    """
+    Realize a prevision of the next closing price for the given stock ticker.
+    Args:
+        ticker (str): The stock ticker symbol.
+    Returns:
+        dict: A dictionary containing the ticker and the predicted closing price.
+    """
     ticker_SA = f"{ticker}.SA"
     logger.info(f"Recebemos o request para o ticker: {ticker}")
     
@@ -71,6 +74,7 @@ async def predict(
         if not versions:
             raise ValueError(f"Modelo '{model_name}' não encontrado no registro do MLflow em {mlruns_path}")
         
+        # Ordena as versões para pegar a mais recente
         versions.sort(key=lambda x: int(x.version))
         latest_version_obj = versions[-1]
         version_number = latest_version_obj.version
@@ -79,11 +83,11 @@ async def predict(
         model_uri = f"models:/{model_name}/{version_number}"
         
         logger.info(f"Carregando versão {version_number} (Stage: {current_stage}) do URI: {model_uri}")
-        
 
         model = mlflow.pytorch.load_model(model_uri=model_uri)
         logger.info(f"Modelo carregado com sucesso para o ticker: {ticker}")
         
+        # Obter dados históricos do Yahoo Finance
         stock = yf.Ticker(ticker_SA)
         stock_wind_size = stock.history(period=os.getenv("YEAR_HISTORY"))
         df = pd.DataFrame(stock_wind_size)
@@ -99,17 +103,20 @@ async def predict(
         
         model.eval()
         
+        # Realizar a predição
         with torch.no_grad():
             prediction = model(datas)
             normalized_prediction = prediction.detach().cpu().numpy()
             real_value = scaler_target.inverse_transform(normalized_prediction)
             real_value = f"{real_value[0][0]:.2f}"
             
-            return {
+            return JSONResponse(
+                content={
                 "ticker": ticker,
                 "predicted_close_price": float(real_value)
-            }
-            
+                },
+                status_code=200)
+
     except Exception as e:
         logger.error(f"Erro ao processar a previsão para o ticker {ticker}: {e}")
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
