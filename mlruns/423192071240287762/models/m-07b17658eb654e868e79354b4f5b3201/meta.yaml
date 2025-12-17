@@ -1,0 +1,10 @@
+artifact_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-07b17658eb654e868e79354b4f5b3201/artifacts
+creation_timestamp: 1765999731086
+experiment_id: '423192071240287762'
+last_updated_timestamp: 1765999738292
+model_id: m-07b17658eb654e868e79354b4f5b3201
+model_type: null
+name: model
+source_run_id: c1f2870bd3fd4c1d847f177160db3f13
+status: 2
+status_message: null

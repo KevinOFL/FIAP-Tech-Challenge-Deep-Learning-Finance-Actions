@@ -180,25 +180,25 @@ class Trainer:
                         logger.info(f'Epoca [{epoch+1}/{geral_params["num_epochs"]}], Train Loss RMSE: {rmse.item():.5f} - Test Loss RMSE: {test_rmse.item():.5f}')
                 
                 
-                if current_loss_rmse < 0.5:
+                if current_loss_rmse < 0.02:
                     logger.info("Treinamento concluido. Salvando o modelo...")
-                    logger.warning(f"O modelo atingiu um RMSE menor que 0.5, SUSPEITO: {current_loss_rmse:.5f}")
+                    logger.warning(f"O modelo atingiu um RMSE menor que 0.02, SUSPEITO: {current_loss_rmse:.5f}")
                     mlflow.set_tag("classification", "suspect")
-                elif current_loss_rmse <= 1.5 and current_loss_rmse >= 0.5:
+                elif current_loss_rmse <= 0.02 and current_loss_rmse >= 0.05:
                     logger.info("Treinamento concluido. Salvando o modelo...")
-                    logger.info(f"O modelo atingiu um RMSE entre 0.5 e 1.5, OTIMO: {current_loss_rmse:.5f}")
+                    logger.info(f"O modelo atingiu um RMSE entre 0.02 e 0.05, OTIMO: {current_loss_rmse:.5f}")
                     mlflow.set_tag("classification", "excellent")
-                elif current_loss_rmse > 1.5 and current_loss_rmse <= 3.0:
+                elif current_loss_rmse > 0.05 and current_loss_rmse <= 0.1:
                     logger.info("Treinamento concluido. Salvando o modelo...")
-                    logger.info(f"O modelo atingiu um RMSE entre 1.5 e 3.0, BOM: {current_loss_rmse:.5f}")
+                    logger.info(f"O modelo atingiu um RMSE entre 0.05 e 0.1, BOM: {current_loss_rmse:.5f}")
                     mlflow.set_tag("classification", "good")
-                elif current_loss_rmse > 3.0 and current_loss_rmse <= 5.0:
+                elif current_loss_rmse > 0.1 and current_loss_rmse <= 0.2:
                     logger.info("Treinamento concluido. Salvando o modelo...")
-                    logger.warning(f"O modelo atingiu um RMSE entre 3.0 e 5.0, RUIM: {current_loss_rmse:.5f}")
+                    logger.warning(f"O modelo atingiu um RMSE entre 0.1 e 0.2, RUIM: {current_loss_rmse:.5f}")
                     mlflow.set_tag("classification", "bad")
-                elif current_loss_rmse > 5.0:
+                elif current_loss_rmse > 0.2:
                     logger.info("Treinamento concluido. Salvando o modelo...")
-                    logger.warning(f"O modelo atingiu um RMSE maior que 5.0, PESSIMO: {current_loss_rmse:.5f}")
+                    logger.warning(f"O modelo atingiu um RMSE maior que 0.2, PESSIMO: {current_loss_rmse:.5f}")
                     mlflow.set_tag("classification", "terrible")
                 
                 # Inferindo a assinatura do modelo para registro no MLflow
@@ -358,25 +358,25 @@ class Trainer:
                     logger.info(f'Epoca [{epoch+1}/{geral_params["num_epochs"]}], Train Loss RMSE: {rmse.item():.5f} - Test Loss RMSE: {test_rmse.item():.5f}')
                 
             
-            if current_loss_rmse < 0.5:
+            if current_loss_rmse < 0.02:
                 logger.info("Treinamento concluido. Salvando o modelo...")
-                logger.warning(f"O modelo atingiu um RMSE menor que 0.5, SUSPEITO: {current_loss_rmse:.5f}")
+                logger.warning(f"O modelo atingiu um RMSE menor que 0.02, SUSPEITO: {current_loss_rmse:.5f}")
                 mlflow.set_tag("classification", "suspect")
-            elif current_loss_rmse <= 1.5 and current_loss_rmse >= 0.5:
+            elif current_loss_rmse <= 0.02 and current_loss_rmse >= 0.05:
                 logger.info("Treinamento concluido. Salvando o modelo...")
-                logger.info(f"O modelo atingiu um RMSE entre 0.5 e 1.5, OTIMO: {current_loss_rmse:.5f}")
+                logger.info(f"O modelo atingiu um RMSE entre 0.02 e 0.05, OTIMO: {current_loss_rmse:.5f}")
                 mlflow.set_tag("classification", "excellent")
-            elif current_loss_rmse > 1.5 and current_loss_rmse <= 3.0:
+            elif current_loss_rmse > 0.05 and current_loss_rmse <= 0.1:
                 logger.info("Treinamento concluido. Salvando o modelo...")
-                logger.info(f"O modelo atingiu um RMSE entre 1.5 e 3.0, BOM: {current_loss_rmse:.5f}")
+                logger.info(f"O modelo atingiu um RMSE entre 0.05 e 0.1, BOM: {current_loss_rmse:.5f}")
                 mlflow.set_tag("classification", "good")
-            elif current_loss_rmse > 3.0 and current_loss_rmse <= 5.0:
+            elif current_loss_rmse > 0.1 and current_loss_rmse <= 0.2:
                 logger.info("Treinamento concluido. Salvando o modelo...")
-                logger.warning(f"O modelo atingiu um RMSE entre 3.0 e 5.0, RUIM: {current_loss_rmse:.5f}")
+                logger.warning(f"O modelo atingiu um RMSE entre 0.1 e 0.2, RUIM: {current_loss_rmse:.5f}")
                 mlflow.set_tag("classification", "bad")
-            elif current_loss_rmse > 5.0:
+            elif current_loss_rmse > 0.2:
                 logger.info("Treinamento concluido. Salvando o modelo...")
-                logger.warning(f"O modelo atingiu um RMSE maior que 5.0, PESSIMO: {current_loss_rmse:.5f}")
+                logger.warning(f"O modelo atingiu um RMSE maior que 0.2, PESSIMO: {current_loss_rmse:.5f}")
                 mlflow.set_tag("classification", "terrible")
 
             # Inferindo a assinatura do modelo para registro no MLflow
@@ -402,3 +402,16 @@ class Trainer:
             mlflow.log_artifact(f"./src/api_deep_finances/dl/scalers/scaler_all_{ticker}.joblib")
                 
         logger.info("Treinamento do modelo concluído.")
+
+
+trainer = Trainer()
+trainer.train_unique_model(
+    geral_params=geral_params,
+    windows_size=20,
+    hidden_size=64,
+    ticker="AURE3.SA",
+    tags=tags,
+    device=trainer.device,
+    learning_rate=0.001,
+    num_layers=2,
+) 
