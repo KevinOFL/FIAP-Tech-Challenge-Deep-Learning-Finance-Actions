@@ -1,0 +1,15 @@
+creation_timestamp: 1765823398744
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823398744
+model_id: m-2965444d8e064cf2a5e72a801d07de4a
+name: LSTMModel_AXIA3
+run_id: 6c2ffc79aedc42799111c54205f50ae5
+run_link: null
+source: models:/m-2965444d8e064cf2a5e72a801d07de4a
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-2965444d8e064cf2a5e72a801d07de4a/artifacts
+user_id: null
+version: 1

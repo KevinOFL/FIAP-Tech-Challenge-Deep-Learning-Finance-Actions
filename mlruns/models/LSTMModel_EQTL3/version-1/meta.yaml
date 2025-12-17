@@ -1,0 +1,15 @@
+creation_timestamp: 1765823716511
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823716511
+model_id: m-2dfab9e3ea36434784f02af3aa5e6c91
+name: LSTMModel_EQTL3
+run_id: 0021702907604bbea8b993587e04a9e1
+run_link: null
+source: models:/m-2dfab9e3ea36434784f02af3aa5e6c91
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-2dfab9e3ea36434784f02af3aa5e6c91/artifacts
+user_id: null
+version: 1

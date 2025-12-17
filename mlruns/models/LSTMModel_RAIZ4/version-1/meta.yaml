@@ -1,0 +1,15 @@
+creation_timestamp: 1765823955572
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823955572
+model_id: m-71c8ee625de744b1aabb7b5f9e11b76f
+name: LSTMModel_RAIZ4
+run_id: 10c20899908248639b1a922c19332b6c
+run_link: null
+source: models:/m-71c8ee625de744b1aabb7b5f9e11b76f
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-71c8ee625de744b1aabb7b5f9e11b76f/artifacts
+user_id: null
+version: 1

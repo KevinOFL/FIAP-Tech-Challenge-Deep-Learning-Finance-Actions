@@ -1,0 +1,15 @@
+creation_timestamp: 1765823891176
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823891176
+model_id: m-6f764b5530dd43f58f0a5f5d4cab5b08
+name: LSTMModel_PETR4
+run_id: 2ce09060fef74c50a1a15b2f3dfc6d9f
+run_link: null
+source: models:/m-6f764b5530dd43f58f0a5f5d4cab5b08
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-6f764b5530dd43f58f0a5f5d4cab5b08/artifacts
+user_id: null
+version: 1

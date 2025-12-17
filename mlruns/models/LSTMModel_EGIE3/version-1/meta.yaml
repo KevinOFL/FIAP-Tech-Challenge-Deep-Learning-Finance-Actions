@@ -1,0 +1,15 @@
+creation_timestamp: 1765823593719
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823593719
+model_id: m-959cd258b35543c7833d421b148d7942
+name: LSTMModel_EGIE3
+run_id: 8641d046c9c44a9985c3e061aa3bd28b
+run_link: null
+source: models:/m-959cd258b35543c7833d421b148d7942
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-959cd258b35543c7833d421b148d7942/artifacts
+user_id: null
+version: 1

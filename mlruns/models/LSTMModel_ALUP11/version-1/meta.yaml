@@ -1,0 +1,15 @@
+creation_timestamp: 1765823356119
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823356119
+model_id: m-035d2ec54b4c499aa3cd10523e748ca4
+name: LSTMModel_ALUP11
+run_id: 73dd4170512c4786a6cfbb54ab39eb04
+run_link: null
+source: models:/m-035d2ec54b4c499aa3cd10523e748ca4
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-035d2ec54b4c499aa3cd10523e748ca4/artifacts
+user_id: null
+version: 1

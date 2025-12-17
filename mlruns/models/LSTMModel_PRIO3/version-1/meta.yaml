@@ -1,0 +1,15 @@
+creation_timestamp: 1765823929005
+current_stage: None
+deployment_job_state: null
+description: null
+last_updated_timestamp: 1765823929005
+model_id: m-c57559c74bf44d6c8bd1132ef3f247e9
+name: LSTMModel_PRIO3
+run_id: 151b67555b06468b854b27670f65b691
+run_link: null
+source: models:/m-c57559c74bf44d6c8bd1132ef3f247e9
+status: READY
+status_message: null
+storage_location: file:///C:/Users/kevin/OneDrive/Documentos/FIAP/FIAP_aulas/Fase_4/FIAP-Tech-Challenge-Deep-Learning-Finance-Actions/mlruns/423192071240287762/models/m-c57559c74bf44d6c8bd1132ef3f247e9/artifacts
+user_id: null
+version: 1
