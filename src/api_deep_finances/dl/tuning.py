@@ -6,6 +6,9 @@ import sys
 import os
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -18,13 +21,23 @@ from dataset import main as load_data
 from configs.log_config import logger
 from modelo import LSTMModel
 
-#TICKER_ALVO = "ALUP11.SA" # Escolha um ticker representativo ou aquele que está com performance ruim
-N_TRIALS = 30             # Quantas combinações diferentes o Optuna vai testar
-TICKERS = pd.read_csv('./docs/planilhas_completas/data_actions_energy_3year.csv')['Ticker'].unique().tolist()
+TICKERS = [
+    'NEOE3', 'AXIA6', 'EQTL3', 'RAIZ4', 'CPFE3', 'RECV3', 'AXIA3',     
+    'ALUP11', 'VBBR3', 'BRAV3', 'AURE3', 'EGIE3', 'CMIG4', 'CSAN3',     
+    'ENEV3', 'TAEE11', 'UGPA3', 'ENGI11', 'LIGT3', 'CPLE6', 'PRIO3',
+    'PETR4'
+]
+N_TRIALS = int(os.getenv("N_TRIALS", 20))
+EPOCHS_TUNING = int(os.getenv('EPOCHS_TUNING', 10))
 
-def objective(trial, ticker_index=0):
+def objective(trial:int, ticker:str) -> float:
     """
-    Função que o Optuna vai rodar repetidamente.
+    Objective function for Optuna hyperparameter optimization.
+    Parameters:
+    - trial: An Optuna trial object.
+    - ticker: Ticker symbol for which to load the data.
+    Returns:
+    - RMSE value on the test set after training with the given hyperparameters.
     """
     
     #Parametros a serem otimizados
@@ -41,35 +54,37 @@ def objective(trial, ticker_index=0):
         X_train, y_train, X_test, y_test = load_data(
             path='./docs/planilhas_completas/data_actions_energy_3year.csv', 
             collumn='Close', 
-            ticker=TICKERS[ticker_index],
+            ticker=ticker,
             window_size=params['window_size'] # <--- AQUI MUDA TUDO
         )
-    except ValueError:
+    except Exception as e:
         # Se a janela for muito grande para os dados disponíveis
+        print(f"Erro ao carregar dados para {ticker}: {e}")
         raise optuna.TrialPruned()
     
+    # Definindo o input_dim dinamicamente
+    input_dim = X_train.shape[2] if len(X_train.shape) == 3 else 1
     # Ajustes de Tensor
     y_train = y_train.view(-1, 1)
     y_test = y_test.view(-1, 1)
     
+    # Movendo para GPU se disponível
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     X_train, y_train = X_train.to(device), y_train.to(device)
     X_test, y_test = X_test.to(device), y_test.to(device)
 
     # Definição do modelo, critério e otimizador
     modelo = LSTMModel(
-        input_size=5, 
+        input_size=input_dim, 
         hidden_size=params['hidden_size'], 
         num_layers=params['num_layers']
     ).to(device)
     
+    # Critério e otimizador
     criterion = nn.MSELoss()
     optimizer = optim.Adam(modelo.parameters(), lr=params['learning_rate'])
-
-    # Loop de treinamento simples
-    # Não precisamos de 1000 épocas para saber se a configuração é boa. 50 ou 100 bastam.
-    EPOCHS_TUNING = 100
     
+    # Treinamento do modelo
     for epoch in range(EPOCHS_TUNING):
         modelo.train()
         outputs = modelo(X_train)
@@ -93,29 +108,24 @@ def objective(trial, ticker_index=0):
         if trial.should_prune():
             raise optuna.TrialPruned()
 
-    # O Optuna quer MINIMIZAR esse valor retornado
     return rmse
 
-if __name__ == "__main__":
-    list_actions_params = []
-    
-    for i, ticker in enumerate(TICKERS):
-        dict_params = {}
-        dict_params['ticker'] = ticker
-        logger.info("=" * 50)
-        logger.info(f"Otimizando hiperparâmetros para o ticker {ticker} ({i+1}/{len(TICKERS)})")
-        
-        # Cria o estudo
-        study = optuna.create_study(direction="minimize", study_name=f"LSTM_Tuning for {ticker}")
-        # Roda a otimização
-        study.optimize(objective, n_trials=N_TRIALS)
+# Executando a otimização
+# TICKERS{
+# 0:NEOE3, 1:AXIA6, 2:EQTL3, 3:RAIZ4, 4:CPFE3, 5:RECV3, 6:AXIA3, 7:ALUP11, 8:VBBR3,
+# 9:BRAV3, 10:AURE3, 11:EGIE3, 12:CMIG4, 13:CSAN3, 14:ENEV3, 15:TAEE11, 16:UGPA3,
+# 17:ENGI11, 18:LIGT3, 19:CPLE6, 20:PRIO3, 21:PETR4}
 
-        for key, value in study.best_params.items():
-            dict_params[key] = value
-            
-        logger.info(f"Melhores hiperparâmetros para {ticker}: {study.best_params}")
-        
-        list_actions_params.append(dict_params)
-        
-    df_params = pd.DataFrame(list_actions_params)
-    df_params.to_csv('./src/api_deep_finances/dl/docs/optimized_hyperparameters.csv', index=False)
+ticker = f"{TICKERS[0]}.SA"
+logger.info(f"--- Otimizando {ticker} ---")
+
+# Criando o estudo
+study = optuna.create_study(direction="minimize", study_name=f"Study for {ticker}")
+# Executando a otimização
+study.optimize(lambda trial: objective(trial, ticker), n_trials=N_TRIALS)
+
+logger.info(f"Melhor RMSE para {ticker}: {study.best_value}")
+for i in range(len(study.best_params)):
+    param_name = list(study.best_params.keys())[i]
+    param_value = study.best_params[param_name]
+    logger.info(f"  {param_name}: {param_value}")
