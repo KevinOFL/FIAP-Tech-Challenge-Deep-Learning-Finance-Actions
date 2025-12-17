@@ -18,7 +18,7 @@ sys.path.append(grandparent_dir)
 sys.path.append(project_root)
 
 from dataset import main as load_data
-from configs.log_config import logger
+from configs.log_config import logger_training as logger
 from modelo import LSTMModel
 
 TICKERS = [

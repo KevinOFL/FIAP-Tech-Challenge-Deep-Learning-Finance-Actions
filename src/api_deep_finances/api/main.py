@@ -21,7 +21,8 @@ project_root = os.path.dirname(grandparent_dir)
 sys.path.append(grandparent_dir) 
 sys.path.append(project_root)
 
-from configs.log_config import logger
+from configs.log_config import logger_api as logger
+from configs.log_config import logger_db
 from src.api_deep_finances.dl.dataset import prediction_data_tratative
 from src.api_deep_finances.dl.modelo import LSTMModel
 

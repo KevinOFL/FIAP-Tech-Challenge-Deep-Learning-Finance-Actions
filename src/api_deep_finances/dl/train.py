@@ -17,7 +17,7 @@ sys.path.append(project_root)    # Adiciona a raiz do projeto
 
 from dataset import main as load_data
 from modelo import LSTMModel
-from configs.log_config import logger
+from configs.log_config import logger_training as logger
 
 # Parâmetros gerais do experimento
 geral_params = {

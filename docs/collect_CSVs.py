@@ -10,7 +10,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
-from configs.log_config import logger
+from configs.log_config import logger_collection as logger
 
 class Collect_CSVs:
     def __init__(self):
