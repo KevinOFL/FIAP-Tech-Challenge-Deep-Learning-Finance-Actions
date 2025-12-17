@@ -1,11 +1,11 @@
-from sqlalchemy import Column, String, Date, Time, Numeric
+from sqlalchemy import Column, String, Date, Time, Numeric, Integer
 from sqlalchemy.sql import func
 from configs.database import Base
 
 class Prediction(Base):
     __tablename__ = "previsions"
     
-    id = Column(String, primary_key=True, index=True, autoincrement=False)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     ticker = Column(String, nullable=False)
     model_name = Column(String, nullable=False)
     model_version = Column(String, nullable=False)
