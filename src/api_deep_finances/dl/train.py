@@ -3,7 +3,6 @@ import mlflow
 import mlflow.pytorch
 import pandas as pd
 import numpy
-import numpy
 import torch
 import sys
 import os
@@ -41,24 +40,47 @@ tags = {
 params_for_tickers = pd.read_csv('./src/api_deep_finances/dl/docs/optimized_hyperparameters.csv')
 
 tickers = params_for_tickers['ticker'].unique().tolist()
-
-for i, ticker in enumerate(tickers):
-    windows_size = params_for_tickers[params_for_tickers['ticker']==ticker]['window_size'].values[0]
-    hidden_size = int(params_for_tickers[params_for_tickers['ticker']==ticker]['hidden_size'].values[0])
-    num_layers = params_for_tickers[params_for_tickers['ticker']==ticker]['num_layers'].values[0]
-    learning_rate = params_for_tickers[params_for_tickers['ticker']==ticker]['learning_rate'].values[0]
-    
-    logger.info(f"Treinando modelo para o ticker {ticker} ({i+1}/{len(tickers)})")
-    
-    logger.info(f"Carregando dados para treinamento...")
-    X_train, y_train, X_test, y_test = load_data(
-        path='./docs/planilhas_completas/data_actions_energy_3year.csv',
-        collumn=PARAMS['feature_column'],
-        ticker=ticker,
-        window_size=windows_size
-    )
-    y_train = y_train.view(-1, 1)   # Ajusta o shape de y_train para (batch_size, 1)
-    y_test = y_test.view(-1, 1)     # Ajusta o shape de y_test para (batch_size, 1)
+class Trainer:
+    def __init__(self):
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = device
+        
+    def train_much_models(
+        self,
+        geral_params:dict,
+        params_for_tickers:pd.DataFrame,
+        tickers:list[str],
+        tags:dict=None,
+        device=None
+        ):
+        """
+        Trains multiple LSTM models for different tickers using specified hyperparameters.
+        Parameters:
+        - geral_params: Dictionary containing general parameters for training.
+        - params_for_tickers: DataFrame containing hyperparameters for each ticker.
+        - tickers: List of ticker symbols for which to train models.
+        - tags: Optional dictionary of tags to log with the experiment.
+        - device: Device to use for training (CPU or GPU).
+        """
+        logger.info("Iniciando treinamento de múltiplos modelos...")
+        for i, ticker in enumerate(tickers):
+            # Pegando os hiperparâmetros otimizados para o ticker atual
+            windows_size = params_for_tickers[params_for_tickers['ticker']==ticker]['window_size'].values[0]
+            hidden_size = int(params_for_tickers[params_for_tickers['ticker']==ticker]['hidden_size'].values[0])
+            num_layers = params_for_tickers[params_for_tickers['ticker']==ticker]['num_layers'].values[0]
+            learning_rate = params_for_tickers[params_for_tickers['ticker']==ticker]['learning_rate'].values[0]
+            
+            logger.info(f"Treinando modelo para o ticker {ticker} ({i+1}/{len(tickers)})")
+            
+            logger.info(f"Carregando dados para treinamento...")
+            X_train, y_train, X_test, y_test = load_data(
+                path='./docs/planilhas_completas/data_actions_energy_3year.csv',
+                collumn=geral_params['feature_column'],
+                ticker=ticker,
+                window_size=windows_size
+            )
+            y_train = y_train.view(-1, 1)   # Ajusta o shape de y_train para (batch_size, 1)
+            y_test = y_test.view(-1, 1)     # Ajusta o shape de y_test para (batch_size, 1)
 
             logger.info(f"Dados carregados: X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
 
@@ -105,37 +127,215 @@ for i, ticker in enumerate(tickers):
                 best_loss_rmse = float('inf')
                 patience_counter = 0
 
-        logger.info("Iniciando loop de treinamento...")
-        for epoch in range(PARAMS['num_epochs']):
-            modelo.train()
-            
-            outputs = modelo(X_train)                           # Treinamento do modelo
-            loss = criterion(outputs, y_train)                  # Cálculo da loss
-            rmse = torch.sqrt(loss)                             # Cálculo do RMSE   
-            mae = torch.mean(torch.abs(outputs - y_train))      # Cálculo do MAE
-            optimizer.zero_grad()                               # Zerando os gradientes          
-            loss.backward()                                     # Backpropagation  
-            optimizer.step()                                    # Atualização dos pesos
-            
-            
-            # Avaliação no conjunto de teste
-            modelo.eval()
-            with torch.no_grad():
-                test_outputs = modelo(X_test)
-                test_loss = criterion(test_outputs, y_test)
-                current_loss_mse = test_loss.item() 
-                test_rmse = torch.sqrt(test_loss)
-                current_loss_rmse = test_rmse.item()
-                test_mae = torch.mean(torch.abs(test_outputs - y_test))
+                logger.info(f"Iniciando loop de treinamento por {geral_params['num_epochs']} épocas...")
+                for epoch in range(geral_params['num_epochs']):
+                    modelo.train()
+                    
+                    outputs = modelo(X_train)                           # Treinamento do modelo
+                    loss = criterion(outputs, y_train)                  # Cálculo da loss
+                    rmse = torch.sqrt(loss)                             # Cálculo do RMSE   
+                    mae = torch.mean(torch.abs(outputs - y_train))      # Cálculo do MAE
+                    optimizer.zero_grad()                               # Zerando os gradientes          
+                    loss.backward()                                     # Backpropagation  
+                    optimizer.step()                                    # Atualização dos pesos
+                    
+                    # Avaliação no conjunto de teste
+                    modelo.eval()
+                    with torch.no_grad():
+                        test_outputs = modelo(X_test)
+                        test_loss = criterion(test_outputs, y_test)
+                        current_loss_mse = test_loss.item() 
+                        test_rmse = torch.sqrt(test_loss)
+                        current_loss_rmse = test_rmse.item()
+                        test_mae = torch.mean(torch.abs(test_outputs - y_test))
+                        
+                    scheduler.step(test_loss)                           # Atualiza o scheduler com a loss de teste atual
+                    
+                    # Log das métricas no MLflow
+                    mlflow.log_metric("Train Loss MSE", loss.item(), step=epoch)
+                    mlflow.log_metric("Test Loss MSE", test_loss.item(), step=epoch)
+                    mlflow.log_metric("Train RMSE", rmse.item(), step=epoch)
+                    mlflow.log_metric("Test RMSE", test_rmse.item(), step=epoch)
+                    mlflow.log_metric("Train MAE", mae.item(), step=epoch)
+                    mlflow.log_metric("Test MAE", test_mae.item(), step=epoch)
+
+                    # Coloca o modelo de volta em modo de treinamento
+                    modelo.train()
+                    
+                    # Early Stopping check
+                    if current_loss_mse < (best_loss_mse - geral_params['min_delta']):
+                        best_loss_mse = current_loss_mse
+                        best_loss_rmse = current_loss_rmse
+                        patience_counter = 0
+                    else:
+                        patience_counter += 1
+                        
+                    if patience_counter >= geral_params['patience']:
+                        logger.info("----- Activate Early stopping -----")
+                        logger.info(f'Early stopping at epoch {epoch+1} and loss not upgraded for {geral_params["patience"]} epochs. The best loss RMSE was {best_loss_rmse:.5f}. Loss now is {current_loss_rmse:.5f}.')
+                        break
+                    
+                    # Log intermediário a cada 100 épocas
+                    if (epoch+1) % 100 == 0:
+                        logger.info(f'Epoca [{epoch+1}/{geral_params["num_epochs"]}], Train Loss RMSE: {rmse.item():.5f} - Test Loss RMSE: {test_rmse.item():.5f}')
                 
-            scheduler.step(test_loss)                           # Atualiza o scheduler com a loss de teste atual
-            
-            mlflow.log_metric("Train Loss MSE", loss.item(), step=epoch)
-            mlflow.log_metric("Test Loss MSE", test_loss.item(), step=epoch)
-            mlflow.log_metric("Train RMSE", rmse.item(), step=epoch)
-            mlflow.log_metric("Test RMSE", test_rmse.item(), step=epoch)
-            mlflow.log_metric("Train MAE", mae.item(), step=epoch)
-            mlflow.log_metric("Test MAE", test_mae.item(), step=epoch)
+                
+                if current_loss_rmse < 0.5:
+                    logger.info("Treinamento concluido. Salvando o modelo...")
+                    logger.warning(f"O modelo atingiu um RMSE menor que 0.5, SUSPEITO: {current_loss_rmse:.5f}")
+                    mlflow.set_tag("classification", "suspect")
+                elif current_loss_rmse <= 1.5 and current_loss_rmse >= 0.5:
+                    logger.info("Treinamento concluido. Salvando o modelo...")
+                    logger.info(f"O modelo atingiu um RMSE entre 0.5 e 1.5, OTIMO: {current_loss_rmse:.5f}")
+                    mlflow.set_tag("classification", "excellent")
+                elif current_loss_rmse > 1.5 and current_loss_rmse <= 3.0:
+                    logger.info("Treinamento concluido. Salvando o modelo...")
+                    logger.info(f"O modelo atingiu um RMSE entre 1.5 e 3.0, BOM: {current_loss_rmse:.5f}")
+                    mlflow.set_tag("classification", "good")
+                elif current_loss_rmse > 3.0 and current_loss_rmse <= 5.0:
+                    logger.info("Treinamento concluido. Salvando o modelo...")
+                    logger.warning(f"O modelo atingiu um RMSE entre 3.0 e 5.0, RUIM: {current_loss_rmse:.5f}")
+                    mlflow.set_tag("classification", "bad")
+                elif current_loss_rmse > 5.0:
+                    logger.info("Treinamento concluido. Salvando o modelo...")
+                    logger.warning(f"O modelo atingiu um RMSE maior que 5.0, PESSIMO: {current_loss_rmse:.5f}")
+                    mlflow.set_tag("classification", "terrible")
+                
+                # Inferindo a assinatura do modelo para registro no MLflow
+                input_sample_numpy = X_train[0:1].cpu().numpy()
+                output_sample_numpy = modelo(X_train[0:1]).detach().cpu().numpy()
+                signature = infer_signature(input_sample_numpy, output_sample_numpy)
+                
+                ticker = ticker.replace('.SA','')
+                
+                # Salvando o modelo treinado no MLflow
+                mlflow.pytorch.log_model(
+                    modelo,                                         # modelo treinado
+                    artifact_path='model',                          # caminho do artefato
+                    input_example=input_sample_numpy,               # exemplo de input
+                    registered_model_name=f"LSTMModel_{ticker}",    # nome do modelo registrado
+                    signature=signature                             # assinatura do modelo  
+                )
+
+                logger.info("Modelo salvo com sucesso no MLflow.")
+                
+                logger.info("Salvando scalers usados no pre-processamento...")
+                mlflow.log_artifact(f"./src/api_deep_finances/dl/scalers/scaler_target_{ticker}.joblib")
+                mlflow.log_artifact(f"./src/api_deep_finances/dl/scalers/scaler_all_{ticker}.joblib")
+                
+        logger.info("Treinamento de todos os modelos concluído.")
+
+
+    def train_unique_model(
+        self,
+        geral_params:dict,
+        windows_size:int,
+        hidden_size:int,
+        num_layers:int,
+        learning_rate:float,
+        ticker:str,
+        tags:dict=None,
+        device=None
+        ):
+        """
+        Treined a unique LSTM model for a given ticker with specified hyperparameters.
+        Parameters:
+        - geral_params: Dictionary containing general parameters for training.
+        - windows_size: Size of the sliding window.
+        - hidden_size: Number of features in the hidden state of the LSTM.
+        - num_layers: Number of recurrent layers in the LSTM.
+        - learning_rate: Learning rate for the optimizer.
+        - ticker: Ticker symbol for which to train the model.
+        - tags: Optional dictionary of tags to log with the experiment.
+        - device: Device to use for training (CPU or GPU).
+        """
+        logger.info(f"Treinando modelo LSTMModel_{ticker}")
+        logger.info(f"Carregando dados para treinamento...")
+        X_train, y_train, X_test, y_test = load_data(
+            path='./docs/planilhas_completas/data_actions_energy_3year.csv',
+            collumn=geral_params['feature_column'],
+            ticker=ticker,
+            window_size=windows_size
+        )
+        y_train = y_train.view(-1, 1)   # Ajusta o shape de y_train para (batch_size, 1)
+        y_test = y_test.view(-1, 1)     # Ajusta o shape de y_test para (batch_size, 1)
+
+        logger.info(f"Dados carregados: X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
+
+        mlflow.set_experiment(geral_params['experimento'])
+
+        logger.info("Inicializando treinamento do modelo com mlflow...")
+        with mlflow.start_run():
+            # Metadados do experimento
+            for i in range(len(tags)):
+                mlflow.set_tag(list(tags.keys())[i], list(tags.values())[i])
+            mlflow.set_tag("ticker", ticker)
+            mlflow.log_params(geral_params)
+            mlflow.log_param("hidden_size", hidden_size)
+            mlflow.log_param("num_layers", num_layers)
+            mlflow.log_param("learning_rate", learning_rate)
+            mlflow.log_param("window_size", windows_size)
+
+            modelo = LSTMModel(
+                input_size=geral_params['input_size'],
+                hidden_size=hidden_size,
+                num_layers=num_layers
+            )
+
+            # Move modelo e dados para GPU se disponível
+            modelo.to(device)
+            X_train = X_train.to(device)
+            y_train = y_train.to(device)
+            X_test = X_test.to(device)
+            y_test = y_test.to(device)
+                
+            logger.info(f"Usando dispositivo para treinamento: {device}")
+
+            # Configuração do otimizador e função de perda
+            criterion = torch.nn.MSELoss()
+            optimizer = optim.Adam(
+                modelo.parameters(),
+                lr=learning_rate
+            )
+                
+            # Learning rate scheduler para reduzir a taxa de aprendizado se a loss não melhorar por 10 épocas
+            scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=10)
+
+            best_loss_mse = float('inf')
+            best_loss_rmse = float('inf')
+            patience_counter = 0
+
+            logger.info(f"Iniciando loop de treinamento por {geral_params['num_epochs']} épocas...")
+            for epoch in range(geral_params['num_epochs']):
+                modelo.train()
+                    
+                outputs = modelo(X_train)                           # Treinamento do modelo
+                loss = criterion(outputs, y_train)                  # Cálculo da loss
+                rmse = torch.sqrt(loss)                             # Cálculo do RMSE   
+                mae = torch.mean(torch.abs(outputs - y_train))      # Cálculo do MAE
+                optimizer.zero_grad()                               # Zerando os gradientes          
+                loss.backward()                                     # Backpropagation  
+                optimizer.step()                                    # Atualização dos pesos
+                    
+                # Avaliação no conjunto de teste
+                modelo.eval()
+                with torch.no_grad():
+                    test_outputs = modelo(X_test)
+                    test_loss = criterion(test_outputs, y_test)
+                    current_loss_mse = test_loss.item() 
+                    test_rmse = torch.sqrt(test_loss)
+                    current_loss_rmse = test_rmse.item()
+                    test_mae = torch.mean(torch.abs(test_outputs - y_test))
+                        
+                scheduler.step(test_loss)                           # Atualiza o scheduler com a loss de teste atual
+                    
+                # Log das métricas no MLflow
+                mlflow.log_metric("Train Loss MSE", loss.item(), step=epoch)
+                mlflow.log_metric("Test Loss MSE", test_loss.item(), step=epoch)
+                mlflow.log_metric("Train RMSE", rmse.item(), step=epoch)
+                mlflow.log_metric("Test RMSE", test_rmse.item(), step=epoch)
+                mlflow.log_metric("Train MAE", mae.item(), step=epoch)
+                mlflow.log_metric("Test MAE", test_mae.item(), step=epoch)
 
                 # Coloca o modelo de volta em modo de treinamento
                 modelo.train()
